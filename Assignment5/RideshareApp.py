@@ -25,10 +25,18 @@ def isDriver(idNum):
     else:
         print("Invalid ID number")
         return False
-    
+
+#create Rider Table
+# cur_obj.execute('''
+# CREATE TABLE rider 
+# riderId VARCHAR(255) NOT NULL PRIMARY KEY);
+# ''')
+
+
 def createDriver():
     #make sure to set global variable currentUserID
     print("Creating new driver account...")
+
 
 def createRider():
     #make sure to set global variable currentUserID
