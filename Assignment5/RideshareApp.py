@@ -9,10 +9,47 @@ conn = mysql.connector.connect(host="localhost",
     password="cpsc408",
     auth_plugin='mysql_native_password',
     database = 'RideShare')
+
+# Global variables and objects:
 #create cursor object
 cur_obj = conn.cursor()
 
+#create db_ops object: takes in the connection and its cursor
+db_ops = db_operations(cur_obj, conn)
+
+# Keeps track of the current user's ID
 currentUserID = "x0"
+
+
+#checks to see if drivers table is empty
+def is_empty_drivers():
+    query = '''
+    SELECT COUNT(*)
+    FROM drivers;
+    '''
+
+    result = db_ops.single_record(query)
+    return result == 0
+
+#checks to see if riders table is empty
+def is_empty_riders():
+    query = '''
+    SELECT COUNT(*)
+    FROM riders;
+    '''
+
+    result = db_ops.single_record(query)
+    return result == 0
+
+#checks to see if rides table is empty
+def is_empty_rides():
+    query = '''
+    SELECT COUNT(*)
+    FROM rides;
+    '''
+
+    result = db_ops.single_record(query)
+    return result == 0
 
 def startScreen():
     print("Welcome to your ridesharing app!")
@@ -26,21 +63,94 @@ def isDriver(idNum):
         print("Invalid ID number")
         return False
 
-#create Rider Table
-# cur_obj.execute('''
-# CREATE TABLE rider 
-# riderId VARCHAR(255) NOT NULL PRIMARY KEY);
-# ''')
-
-
+# Generate the next driverID sequentially and add the driver to the database
 def createDriver():
     #make sure to set global variable currentUserID
     print("Creating new driver account...")
+    # If there are no drivers, set ID to: d1
+    if (is_empty_drivers):
+        currentUserID = 'd1'
+    else:
+        #Generate the next driverID and add the 'd' in front
+        currentUserID = 'd' + generateNextDriverID()
+        pass
+
+    #Set the driver's inital values: ID, 5.0 rating, activeDriver = True
+    initValues = (currentUserID, 5.0, True)
+
+    # now that you have the ID, make a new driver with default values
+    query = "INSERT INTO drivers VALUES(" + initValues + ")"
+    db_ops.single_record(query)
+
+    # We have now created the new driver and added them to the database with initial values.
+    # Proceed to main menu.
 
 
+# Generate the next riderID sequentially and add the rider to the database
 def createRider():
     #make sure to set global variable currentUserID
     print("Creating new rider account...")
+    # If there are no riders, set ID to: r1
+    if (is_empty_riders):
+        currentUserID = 'r1'
+    else:
+        #Generate the next riderID and add the 'r' in front
+        currentUserID = 'r' + generateNextRiderID()
+        pass
+
+    #Set the rider's inital value: ID
+    initValues = currentUserID
+
+    # now that you have the ID, make a new rider
+    query = "INSERT INTO riders VALUES(" + initValues + ")"
+    db_ops.single_record(query)
+
+    # We have now created the new rider and added them to the database.
+    # Proceed to main menu.
+
+# Uses the database to generate the next driverID
+def generateNextDriverID():
+    #find a list of all driverIDs
+    query = '''
+    SELECT DISTINCT driverID
+    FROM drivers;
+    '''
+    #Gets a list of all driverIds
+    driverIDs = db_ops.single_attribute(query)
+
+    #Get the most recently added ID
+    lastID = driverIDs[-1]
+
+    #Remove the rider/driver tag
+    lastID = lastID[1:]
+
+    #Convert ID to integer
+    lastID = int(lastID)
+
+    #Return the next ID by adding 1 to the highest ID in the database
+    return lastID + 1
+
+# Uses the database to generate the next riderID
+def generateNextRiderID():
+    #find a list of all riderIDs
+    query = '''
+    SELECT DISTINCT riderID
+    FROM riders;
+    '''
+    #Gets a list of all riderIDs
+    riderIDs = db_ops.single_attribute(query)
+
+    #Get the most recently added ID
+    lastID = riderIDs[-1]
+
+    #Remove the rider/driver tag
+    lastID = lastID[1:]
+
+    #Convert ID to integer
+    lastID = int(lastID)
+
+    #Return the next ID by adding 1 to the highest ID in the database
+    return lastID + 1
 
 def viewRating():
     print("Viewing rating...")
@@ -63,10 +173,38 @@ def findDriver():
 def rateMyDriver():
     print("Rating driver...")
 
+def returnAllIDs():
+     #find a list of all driverIDs
+    query1 = '''
+    SELECT DISTINCT driverID
+    FROM drivers;
+    '''
+    #Gets a list of all driverIds
+    driverIDs = db_ops.single_attribute(query1)
+
+    #find a list of all riderIDs
+    query2 = '''
+    SELECT DISTINCT riderID
+    FROM riders;
+    '''
+    #Gets a list of all riderIDs
+    riderIDs = db_ops.single_attribute(query2)
+
+    #Join the lists together and return
+    return driverIDs + riderIDs
 
 
-#-----------------MAIN-----------------
+#-----------------MAIN----------------- 
+
+#--------------------------------------
+#ONLY RUN THESE ONCE
+# db_ops.create_drivers_table()
+# db_ops.create_riders_table()
+# db_ops.create_rides_table()
+#--------------------------------------
+
 startScreen()
+
 print('''Are you a new or returning user?: 
 1. New User
 2. Returning User''')
@@ -82,8 +220,24 @@ if userType == 1:   #new user
     if newUserType == 2:    #new rider
         createRider()
 elif userType == 2:   #returning user
+    # Ensure that the user inputs a valid ID:
+    invalidID = True
+    # Get a list of all IDs
+    allIDsList = returnAllIDs()
+    # Get the user's ID
     currentUserID = input("Please enter your ID number: ")
+    # Check if the ID is in the list
+    if currentUserID in allIDsList:
+            invalidID = False
 
+    # If given an ID not in the list, continue asking until a valid ID is input
+    while (invalidID):
+        print("ID not found. Remember to prepend 'r' or 'd' for rider or driver. EX: r10 = rider ID 10")
+        currentUserID = input("Please enter an existing ID number: ")
+        if currentUserID in allIDsList:
+            invalidID = False
+    
+# Run the main menu until the exit option is chosen
 while(True):
     if(isDriver(currentUserID)): #if driver
         print('''What would you like to do?: 

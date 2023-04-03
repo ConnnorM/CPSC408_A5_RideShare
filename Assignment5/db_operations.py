@@ -1,14 +1,12 @@
 #class that handles all the database operations
-import sqlite3
-
-
+# import sqlite3
  
 class db_operations():
     #constructor with connection path to database
     #__init__ is a keyword in python for constructors
-    def __init__(self,conn_path):    #connecting to database constructor
-        self.connection = sqlite3.connect(conn_path)
-        self.cursor = self.connection.cursor()  #make cursor object
+    def __init__(self, cur_obj, conn):    #connecting to database constructor
+        self.connection = conn
+        self.cursor = cur_obj  #make cursor object
         print("connection made...")
 
     #destructor that close connection to database
@@ -17,22 +15,58 @@ class db_operations():
         print("connection closed...")
 
     #function that creates a table in the database
-    def create_songs_table(self):   #pass self in every function to use global or member variables
+    # def create_songs_table(self):   #pass self in every function to use global or member variables
+    #     query = '''
+    #     CREATE TABLE songs(
+    #     songID VARCHAR(22) NOT NULL PRIMARY KEY,
+    #     Name VARCHAR(20),
+    #     Artist VARCHAR(20),
+    #     Album VARCHAR(20),
+    #     releaseDate DATETIME,
+    #     Genre VARCHAR(20),
+    #     Explicit BOOLEAN,
+    #     Duration DOUBLE,
+    #     Energy DOUBLE,
+    #     Danceability DOUBLE,
+    #     Acousticness DOUBLE,
+    #     Liveness DOUBLE,
+    #     Loudness DOUBLE
+    #     );
+    #     '''
+    #     self.cursor.execute(query)
+    #     self.connection.commit()
+
+    # Creates the Drivers table in the database
+    def create_drivers_table(self):
         query = '''
-        CREATE TABLE songs(
-        songID VARCHAR(22) NOT NULL PRIMARY KEY,
-        Name VARCHAR(20),
-        Artist VARCHAR(20),
-        Album VARCHAR(20),
-        releaseDate DATETIME,
-        Genre VARCHAR(20),
-        Explicit BOOLEAN,
-        Duration DOUBLE,
-        Energy DOUBLE,
-        Danceability DOUBLE,
-        Acousticness DOUBLE,
-        Liveness DOUBLE,
-        Loudness DOUBLE
+        CREATE TABLE drivers
+        driverID VARCHAR(4) NOT NULL PRIMARY KEY,
+        currentRating DOUBLE,
+        activeDriver BOOLEAN
+        );
+        '''
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    # Creates the Riders table in the database
+    def create_riders_table(self):
+        query = '''
+        CREATE TABLE riders
+        riderID VARCHAR(4) NOT NULL PRIMARY KEY
+        );
+        '''
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    # Creates the Rides table in the database
+    def create_rides_table(self):
+        query = '''
+        CREATE TABLE rides
+        rideID INT NOT NULL PRIMARY KEY,
+        driverID VARCHAR(4) NOT NULL,
+        riderID VARCHAR(4) NOT NULL,
+        pickupLocation VARCHAR(50),
+        dropoffLocation VARCHAR(50)
         );
         '''
         self.cursor.execute(query)
