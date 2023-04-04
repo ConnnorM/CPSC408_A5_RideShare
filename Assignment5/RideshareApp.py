@@ -1,9 +1,11 @@
 from helper import helper
 from db_operations import db_operations
+import random
 
 #import MySQL
 import mysql.connector
 #Make Connection
+#DON'T FORGET TO CHANGE PASSWORD TO BE YOUR OWN
 conn = mysql.connector.connect(host="localhost",
     user="root",
     password="cpsc408",
@@ -79,7 +81,7 @@ def createDriver():
     initValues = (currentUserID, 5.0, True)
 
     # now that you have the ID, make a new driver with default values
-    query = "INSERT INTO drivers VALUES(" + initValues + ")"
+    query = "INSERT INTO drivers VALUES(" + initValues + ");"
     db_ops.single_record(query)
 
     # We have now created the new driver and added them to the database with initial values.
@@ -102,7 +104,7 @@ def createRider():
     initValues = currentUserID
 
     # now that you have the ID, make a new rider
-    query = "INSERT INTO riders VALUES(" + initValues + ")"
+    query = "INSERT INTO riders VALUES(" + initValues + ");"
     db_ops.single_record(query)
 
     # We have now created the new rider and added them to the database.
@@ -152,27 +154,153 @@ def generateNextRiderID():
     #Return the next ID by adding 1 to the highest ID in the database
     return lastID + 1
 
+#Uses the database to generate the next rideID
+def generateNextRideID():
+    if (is_empty_rides):
+        return 1
+    #find a list of all rideIDs
+    query = '''
+    SELECT DISTINCT rideID
+    FROM rides;
+    '''
+    #Gets a list of all rideIDs
+    rideIDs = db_ops.single_attribute(query)
+
+    #Get the most recently added ID
+    lastID = rideIDs[-1]
+
+    #Return the next ID by adding 1 to the highest ID in the database
+    return lastID + 1
+
+#Allow a driver to view their current rating
 def viewRating():
     print("Viewing rating...")
+    query = '''
+    SELECT currentRating
+    FROM drivers
+    WHERE driverID =:currDriver
+    '''
 
+    #Run query for driverID and get the rating
+    dictionary = {"currDriver":currentUserID}
+    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Print the driver's rating to the screen
+    print("Your current rating: " + results + "/ 5.0")
+    input("Press Enter to return to the main menu...")
+    
+#Allow a driver to view all rides they have driven for
 def viewDriverRides():
     print("Viewing driver rides...")
+    #Grab all information from rides that have driverID matching currentUserID
+    query = '''
+    SELECT *
+    FROM rides
+    WHERE driverID =:currDriver
+    '''
 
+    #Run query for driverID and get all of their rides
+    dictionary = {"currDriver":currentUserID}
+    #This is a list of all rides from the current user/driver
+    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Print all of the driver's rides to the screen
+    helper.pretty_print(results)
+    input("Press Enter to return to the main menu...")
+
+#Allow a rider to view all rides they have ridden for
 def viewRiderRides():
-    print("Viewing driver rides...")
+    print("Viewing rider rides...")
+    #Grab all information from rides that have riderID matching currentUserID
+    query = '''
+    SELECT *
+    FROM rides
+    WHERE riderID =:currRider
+    '''
 
+    #Run query for riderID and get all of their rides
+    dictionary = {"currRider":currentUserID}
+    #This is a list of all rides from the current user/driver
+    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Print all of the rider's rides to the screen
+    helper.pretty_print(results)
+    input("Press Enter to return to the main menu...")
+
+#Allows a driver to enter active mode
 def activateDriverMode():
     print("Activating driver mode...")
+    query = '''
+    UPDATE drivers
+    SET activeDriver = True
+    WHERE driverID =:currDriver
+    '''
 
+    #Run query for driverID
+    dictionary = {"currDriver":currentUserID}
+    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Display result to user
+    print("You are now an active driver. Drive safely!")
+    input("Press Enter to return to the main menu...")
+
+#Allows a driver to exit active mode
 def deactivateDriverMode():
     print("Deactivating driver mode...")
+    query = '''
+    UPDATE drivers
+    SET activeDriver = False
+    WHERE driverID =:currDriver;
+    '''
+
+    #Run query for driverID
+    dictionary = {"currDriver":currentUserID}
+    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Display result to user
+    print("You are no longer an active driver.")
+    input("Press Enter to return to the main menu...")
 
 def findDriver():
     print("Finding driver...")
+    #Get a list of all driverIDs of active drivers
+    query = '''
+    SELECT DISTINCT driverID
+    FROM drivers
+    WHERE activeDriver = True
+    '''
+    #Returns the list of active driver IDs
+    activeDriverIDs = db_ops.single_attribute(query)
 
+    #Randomly select an active driverID from the list
+    chosenDriver = random.choice(activeDriverIDs)
+    print("We've found your driver!")
+
+    #Prompt the user for pickup and dropoff locations
+    pickupLoc = input("Please enter the location you will be picked up from: ")
+    dropoffLoc = input("Please enter the location you will be dropped off at: ")
+
+    #Generate the next rideID
+    currRideID = generateNextRideID()
+
+    #Create a new ride: rideID, driverID, riderID, pickupLocation, dropoffLocation
+    rideInfo = (currRideID, chosenDriver, currentUserID, pickupLoc, dropoffLoc)
+    query = "INSERT INTO rides VALUES(" + rideInfo + ");"
+    db_ops.single_record(query)
+
+    #Give the user the rideID
+    print("Hold tight! Your driver is on their way.")
+    print("Your ride ID is: " + currRideID)
+
+    #Return to main menu
+    input("Press Enter to return to the main menu...")
+
+
+#Allows a user to rate their driver
 def rateMyDriver():
     print("Rating driver...")
 
+#Returns a list of all driver and rider IDs
 def returnAllIDs():
      #find a list of all driverIDs
     query1 = '''
@@ -197,7 +325,7 @@ def returnAllIDs():
 #-----------------MAIN----------------- 
 
 #--------------------------------------
-#ONLY RUN THESE ONCE
+#ONLY RUN THESE ONCE: I haven't run them yet -Connor
 # db_ops.create_drivers_table()
 # db_ops.create_riders_table()
 # db_ops.create_rides_table()
