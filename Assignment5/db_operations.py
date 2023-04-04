@@ -109,6 +109,12 @@ class db_operations():
         self.connection.commit()
         print("update query executed...")
 
+    #uses a named placeholder query to return all values in each row
+    def name_placeholder_query_all_values(self, query, dictionary):
+        self.cursor.execute(query, dictionary)
+        results = self.cursor.fetchall()
+        return results
+
     def delete_record(self, query, dictionary):
         self.cursor.execute(query, dictionary)
         self.connection.commit()

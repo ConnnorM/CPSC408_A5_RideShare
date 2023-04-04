@@ -299,6 +299,39 @@ def findDriver():
 #Allows a user to rate their driver
 def rateMyDriver():
     print("Rating driver...")
+    #Get a list of all rideIDs that involve the currentUserID (rider)
+    query = '''
+    SELECT rideID
+    FROM rides
+    WHERE riderID =:currRider
+    '''
+
+    #Run query for riderID and get all of their rides
+    dictionary = {"currRider":currentUserID}
+    #This is a list of all ride IDs from the current user/rider
+    currUserRideIDList = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Get the most recent ride (highest numerical ride ID)
+    currUserRideIDList.sort()
+    mostRecentRideID = currUserRideIDList[-1]
+
+    #Get the information of the most recent ride for this user
+    query = '''
+    SELECT *
+    FROM rides
+    WHERE rideID =:recentRideID
+    '''
+
+    #Run query for rideID and get all values
+    dictionary = {"recentRideID":mostRecentRideID}
+    #This is all the info in the most recent ride for this user
+    mostRecentRide = db_ops.name_placeholder_query_all_values(query, dictionary)
+
+    #Print the information to the user and ask if it's correct
+    helper.pretty_print(mostRecentRide)
+    print("Is this the ride you wish to leave a review for?")
+
+
 
 #Returns a list of all driver and rider IDs
 def returnAllIDs():
