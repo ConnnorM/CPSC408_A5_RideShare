@@ -1,10 +1,13 @@
 # CPSC408_A5_RideShare
 MySSQL RideShare Lab
+THINGS TO FIX:
+-if you're a new driver/rider and you view rides, it just prints empty space
+-if you're a rider with no rides who tries to rate the most recent driver, it crashes
+-we could add some newlines to what we print to the screen to make it look a bit cleaner
 
--everything works except for rateDriver
--if the original ride info is correct, it works
--if the original ride info is wrong, you can input new info
-    -if you put in new info, it still updates the driver from the original, incorrect query instead of the
-    driver of the actual ride you want to edit
-    -if you input new info, we need to print the ride's details and ask if that's the correct ride
-        -if not, we need to loop through the whole selecting a new ride process
+THINGS TO DO:
+-make a schema that's written out
+-make sure that we have 3rd form normalization (should be good since we made an ER diagram)
+-maybe print column titles to the user? so instead of just seeing d1 they would see driverID printed above where it says d1?
+
+
