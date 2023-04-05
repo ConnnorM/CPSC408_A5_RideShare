@@ -78,6 +78,11 @@ class db_operations():
         return self.cursor.fetchone() [0] #fetchone() returns first row of query, [0] returns first cell of that row
         #can give us just the value of the COUNT(*)
 
+    #we want cursor to run query and return value of the cell when I run it
+    def whole_record(self,query):
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
     def insert_single_record(self,query):
         self.cursor.execute(query)
         self.connection.commit()
@@ -111,6 +116,11 @@ class db_operations():
     
     def update_record(self, query, dictionary):
         self.cursor.execute(query, dictionary)
+        self.connection.commit()
+        print("update query executed...")
+
+    def update_record2(self, query):
+        self.cursor.execute(query)
         self.connection.commit()
         print("update query executed...")
 

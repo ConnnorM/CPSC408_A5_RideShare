@@ -8,7 +8,7 @@ import mysql.connector
 #DON'T FORGET TO CHANGE PASSWORD TO BE YOUR OWN
 conn = mysql.connector.connect(host="localhost",
     user="root",
-    password="cpsc408",
+    password="cpsc408!",
     auth_plugin='mysql_native_password',
     database = 'RideShare')
 
@@ -158,7 +158,7 @@ def generateNextRiderID():
 
 #Uses the database to generate the next rideID
 def generateNextRideID():
-    if (is_empty_rides):
+    if (is_empty_rides()):
         return 1
     #find a list of all rideIDs
     query = '''
@@ -184,8 +184,7 @@ def viewRating():
     '''
 
     #Run query for driverID and get the rating
-    dictionary = {"currDriver":currentUserID}
-    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+    results = db_ops.whole_record(query)
 
     results = results[0][0]
 
@@ -204,9 +203,8 @@ def viewDriverRides():
     '''
 
     #Run query for driverID and get all of their rides
-    dictionary = {"currDriver":currentUserID}
     #This is a list of all rides from the current user/driver
-    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+    results = db_ops.whole_record(query)
 
     #Print all of the driver's rides to the screen
     helper.pretty_print(results)
@@ -219,13 +217,12 @@ def viewRiderRides():
     query = '''
     SELECT *
     FROM rides
-    WHERE riderID =:currRider
+    WHERE riderID =\''''+currentUserID+'''\'
     '''
 
     #Run query for riderID and get all of their rides
-    dictionary = {"currRider":currentUserID}
     #This is a list of all rides from the current user/driver
-    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+    results = db_ops.whole_record(query)
 
     #Print all of the rider's rides to the screen
     helper.pretty_print(results)
@@ -283,12 +280,20 @@ def findDriver():
     dropoffLoc = input("Please enter the location you will be dropped off at: ")
 
     #Generate the next rideID
-    currRideID = generateNextRideID()
+    currRideID = str(generateNextRideID())
 
     #Create a new ride: rideID, driverID, riderID, pickupLocation, dropoffLocation
-    rideInfo = (currRideID, chosenDriver, currentUserID, pickupLoc, dropoffLoc)
-    query = "INSERT INTO rides VALUES(" + rideInfo + ");"
-    db_ops.single_record(query)
+    # rideInfo = (currRideID, chosenDriver, currentUserID, pickupLoc, dropoffLoc)
+    # query = "INSERT INTO rides VALUES(" + rideInfo + ");"
+
+    # query = '''INSERT INTO riders VALUES(\'''' + currentUserID + '''\')'''
+    query = ("INSERT INTO rides VALUES(" + currRideID + ", \'" 
+             + chosenDriver + "\', \'" 
+             + currentUserID + "\', \'" 
+             + pickupLoc + "\', \'" 
+             + dropoffLoc + "\');")
+
+    db_ops.insert_single_record(query)
 
     #Give the user the rideID
     print("Hold tight! Your driver is on their way.")
@@ -305,33 +310,115 @@ def rateMyDriver():
     query = '''
     SELECT rideID
     FROM rides
-    WHERE riderID =:currRider
+    WHERE riderID =\''''+ currentUserID +'''\'
     '''
 
     #Run query for riderID and get all of their rides
-    dictionary = {"currRider":currentUserID}
-    #This is a list of all ride IDs from the current user/rider
-    currUserRideIDList = db_ops.name_placeholder_query_all_values(query, dictionary)
+    # dictionary = {"currRider":currentUserID}
+    # #This is a list of all ride IDs from the current user/rider
+    # currUserRideIDList = db_ops.name_placeholder_query_all_values(query, dictionary)
+    currUserRideIDList = db_ops.whole_record(query)
 
     #Get the most recent ride (highest numerical ride ID)
     currUserRideIDList.sort()
-    mostRecentRideID = currUserRideIDList[-1]
+    mostRecentRideID = str(currUserRideIDList[-1][0])
 
     #Get the information of the most recent ride for this user
     query = '''
     SELECT *
     FROM rides
-    WHERE rideID =:recentRideID
+    WHERE rideID =\''''+ mostRecentRideID +'''\'
     '''
 
     #Run query for rideID and get all values
-    dictionary = {"recentRideID":mostRecentRideID}
     #This is all the info in the most recent ride for this user
-    mostRecentRide = db_ops.name_placeholder_query_all_values(query, dictionary)
+    mostRecentRide = db_ops.whole_record(query)
 
     #Print the information to the user and ask if it's correct
     helper.pretty_print(mostRecentRide)
     print("Is this the ride you wish to leave a review for?")
+    print("Type YES or NO:")
+
+    userType = helper.get_choice_string(['YES','NO'])
+
+    #If the ride info is incorrect, get the correct ride
+    if (userType == 'NO'):
+        #Initialize matchingID boolean to false
+        isMatchingID = False
+        #Get a list of all valid rideIDs
+        query = '''
+        SELECT rideID
+        FROM rides;
+        '''
+        #Returns a list of all RideIDs
+        allRideIDs = db_ops.single_attribute(query)
+
+        #Ask the user for a valid rideID
+        print("Enter the ID of the ride you wish to leave a rating for:")
+        newRideID = str(helper.get_choice(allRideIDs))
+
+        #Check if the riderID matches the ride that was given
+        query = '''
+        SELECT riderID
+        FROM rides
+        WHERE rideID = \''''+ newRideID +'''\'
+        '''
+        #If the riderID of the ride matches the ID of the current user (rider),
+        # proceed to next step. otherwise, give error message and ask for a new ride ID and
+        # repeat to this point.
+        if (db_ops.single_record(query) == currentUserID):
+            isMatchingID = True
+        else:
+            #We know that the user does not match the rides' riderID
+            while (isMatchingID == False):
+                #Ask the user for a valid rideID
+                print("Error. Your riderID does not match the riderID on the given ride.")
+                print("Please enter a ride ID that you were a rider on: ")
+                newRideID = str(helper.get_choice(allRideIDs))
+
+                #Check if the riderID matches the ride that was given
+                query = '''
+                SELECT riderID
+                FROM rides
+                WHERE rideID = \''''+ newRideID +'''\'
+                '''
+
+                #Check if the riderID matches on the ride and the current rider
+                if (db_ops.single_record(query) == currentUserID):
+                    isMatchingID = True
+
+    #Now that we have the correct rideID, get the rating from the user
+    print("Enter the rating of your driver on a scale of 1-5: ")
+    userRating = helper.get_choice([1, 2, 3, 4, 5])
+
+    #Update the driver's rating
+    recentDriverID = mostRecentRide[0][1]
+
+    query = '''
+    SELECT currentRating
+    FROM drivers
+    WHERE driverID = \''''+ recentDriverID +'''\'
+    '''
+
+    #Run query for driverID and get the rating
+    currRating = db_ops.whole_record(query)
+
+    currRating = currRating[0][0]
+
+    #Calculate the driver's new rating
+    newRating = (currRating + userRating) / 2
+
+    #Update the driver's rating
+    query = '''
+    UPDATE drivers
+    SET currentRating = \''''+ str(newRating) +'''\'
+    WHERE driverID =\''''+ recentDriverID +'''\''''
+
+    db_ops.update_record2(query)
+
+    #Inform the user that it worked and wait to go back to main menu
+    print("Your rating has been submitted!")
+    input("Press Enter to return to the main menu...")
 
 
 

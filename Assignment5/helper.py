@@ -38,6 +38,15 @@ class helper():
             print("Incorrect option. Try again")
             choice = input("Enter choice number: ")
         return int(choice)
+    
+    # gets a choice from a list of strings
+    @staticmethod
+    def get_choice_string(lst):
+        choice = input("Enter choice: ")
+        while choice not in lst:
+            print("Unable to find given choice in list. Try again")
+            choice = input("Enter choice: ")
+        return choice
 
     # function prints a list of strings nicely
     @staticmethod
