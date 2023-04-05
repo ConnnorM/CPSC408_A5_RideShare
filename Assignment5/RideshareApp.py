@@ -24,6 +24,11 @@ currentUserID = "x0"
 
 
 #checks to see if drivers table is empty
+def create_all_tables():
+    db_ops.create_drivers_table()
+    db_ops.create_riders_table()
+    db_ops.create_rides_table()
+
 def is_empty_drivers():
     query = '''
     SELECT COUNT(*)
@@ -31,7 +36,7 @@ def is_empty_drivers():
     '''
 
     result = db_ops.single_record(query)
-    return result == 0
+    return (result == 0)
 
 #checks to see if riders table is empty
 def is_empty_riders():
@@ -67,22 +72,21 @@ def isDriver(idNum):
 
 # Generate the next driverID sequentially and add the driver to the database
 def createDriver():
+    global currentUserID    #need global keyword to change global variable ig 
     #make sure to set global variable currentUserID
     print("Creating new driver account...")
     # If there are no drivers, set ID to: d1
-    if (is_empty_drivers):
+    if (is_empty_drivers()):
         currentUserID = 'd1'
     else:
         #Generate the next driverID and add the 'd' in front
-        currentUserID = 'd' + generateNextDriverID()
+        currentUserID = 'd' + str(generateNextDriverID())
         pass
 
-    #Set the driver's inital values: ID, 5.0 rating, activeDriver = True
-    initValues = (currentUserID, 5.0, True)
-
     # now that you have the ID, make a new driver with default values
-    query = "INSERT INTO drivers VALUES(" + initValues + ");"
-    db_ops.single_record(query)
+    query = '''INSERT INTO drivers
+            VALUES(\''''+currentUserID+'''\',5.0,True)'''    
+    db_ops.insert_single_record(query)
 
     # We have now created the new driver and added them to the database with initial values.
     # Proceed to main menu.
@@ -90,22 +94,20 @@ def createDriver():
 
 # Generate the next riderID sequentially and add the rider to the database
 def createRider():
+    global currentUserID
     #make sure to set global variable currentUserID
     print("Creating new rider account...")
     # If there are no riders, set ID to: r1
-    if (is_empty_riders):
+    if (is_empty_riders()):
         currentUserID = 'r1'
     else:
         #Generate the next riderID and add the 'r' in front
-        currentUserID = 'r' + generateNextRiderID()
+        currentUserID = 'r' + str(generateNextRiderID())
         pass
 
-    #Set the rider's inital value: ID
-    initValues = currentUserID
-
     # now that you have the ID, make a new rider
-    query = "INSERT INTO riders VALUES(" + initValues + ");"
-    db_ops.single_record(query)
+    query = '''INSERT INTO riders VALUES(\'''' + currentUserID + '''\')'''
+    db_ops.insert_single_record(query)
 
     # We have now created the new rider and added them to the database.
     # Proceed to main menu.
@@ -178,15 +180,17 @@ def viewRating():
     query = '''
     SELECT currentRating
     FROM drivers
-    WHERE driverID =:currDriver
+    WHERE driverID = \''''+currentUserID+'''\'
     '''
 
     #Run query for driverID and get the rating
     dictionary = {"currDriver":currentUserID}
     results = db_ops.name_placeholder_query_all_values(query, dictionary)
 
+    results = results[0][0]
+
     #Print the driver's rating to the screen
-    print("Your current rating: " + results + "/ 5.0")
+    print("Your current rating: " + str(results) + " / 5.0")
     input("Press Enter to return to the main menu...")
     
 #Allow a driver to view all rides they have driven for
@@ -196,7 +200,7 @@ def viewDriverRides():
     query = '''
     SELECT *
     FROM rides
-    WHERE driverID =:currDriver
+    WHERE driverID =\''''+currentUserID+'''\'
     '''
 
     #Run query for driverID and get all of their rides
@@ -233,12 +237,11 @@ def activateDriverMode():
     query = '''
     UPDATE drivers
     SET activeDriver = True
-    WHERE driverID =:currDriver
+    WHERE driverID =\''''+currentUserID+'''\'
     '''
 
     #Run query for driverID
-    dictionary = {"currDriver":currentUserID}
-    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+    results = db_ops.insert_single_record(query)
 
     #Display result to user
     print("You are now an active driver. Drive safely!")
@@ -250,12 +253,11 @@ def deactivateDriverMode():
     query = '''
     UPDATE drivers
     SET activeDriver = False
-    WHERE driverID =:currDriver;
+    WHERE driverID =\''''+currentUserID+'''\'
     '''
 
     #Run query for driverID
-    dictionary = {"currDriver":currentUserID}
-    results = db_ops.name_placeholder_query_all_values(query, dictionary)
+    results = db_ops.insert_single_record(query)
 
     #Display result to user
     print("You are no longer an active driver.")
@@ -366,6 +368,7 @@ def returnAllIDs():
 
 startScreen()
 
+
 print('''Are you a new or returning user?: 
 1. New User
 2. Returning User''')
@@ -385,11 +388,12 @@ elif userType == 2:   #returning user
     invalidID = True
     # Get a list of all IDs
     allIDsList = returnAllIDs()
+
     # Get the user's ID
     currentUserID = input("Please enter your ID number: ")
     # Check if the ID is in the list
-    if currentUserID in allIDsList:
-            invalidID = False
+    if currentUserID in allIDsList: #True if it is a valid ID
+        invalidID = False
 
     # If given an ID not in the list, continue asking until a valid ID is input
     while (invalidID):
@@ -424,8 +428,8 @@ while(True):
         1. View rides
         2. Find a driver
         3. Rate my driver
-        5. Exit''')
-        riderChoice = helper.get_choice([1,2,3,4,5])
+        4. Exit''')
+        riderChoice = helper.get_choice([1,2,3,4])
         if riderChoice == 1:   #view rides
             viewRiderRides()
         if riderChoice == 2:   #find a driver
@@ -435,4 +439,4 @@ while(True):
         if riderChoice == 4:   #exit
             print("Exiting...")
             break
-conn.close()
+db_ops.destructor()
