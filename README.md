@@ -1,7 +1,17 @@
 # CPSC408_A5_RideShare
+
 MySSQL RideShare Lab
+Connor Martindale and Gabriel Garcia
+CPSC408
+
+Running instructions:
+download and run python .\RideshareApp.py
+
+
 NOTES:
 - Everything is working and fully functional as far as my testing has shown
+
+
 
 THINGS TO DO:
 - make a schema that's written out
