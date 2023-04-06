@@ -1,21 +1,29 @@
 # CPSC408_A5_RideShare
+README Assignment 5 - Rideshare App
+This program simulates a generic ridesharing app in which users can create an account as either a driver or a rider, drivers can view their statistics and previous rides, and riders can give ratings and request rides. All of the data is stored in a MySQL server.
 
-MySSQL RideShare Lab
-Connor Martindale and Gabriel Garcia
-CPSC408
+1.  Connor Martindale
+     002408897
+     martindale@chapman.edu
+     CPSC 408-01
+     Assignment 4 - Playlist App
 
-Running instructions:
-download and run python .\RideshareApp.py
+     Gabriel Garcia
+     ?
+     ?
+
+2.  Files:
+     db_operations.py
+     helper.py
+     RideshareApp.py
+     drivers.csv
+     riders.csv
+     rides.csv
 
 
-NOTES:
-- Everything is working and fully functional as far as my testing has shown
+3. Notes: SQL decided that instead of True/False for boolean values it wanted 1/0, so that is what we have.
 
+4. References: Lecture Notes and Examples
 
-
-THINGS TO DO:
-- make a schema that's written out
-- make sure that we have 3rd form normalization (should be good since we made an ER diagram)
-- maybe print column titles to the user? so instead of just seeing d1 they would see driverID printed above where it says d1?
-
+5. Run Instructions: Via Terminal: navigate to directory with RideshareApp.py -> Python RideshareApp.py
 

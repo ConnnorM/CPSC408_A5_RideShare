@@ -14,28 +14,6 @@ class db_operations():
         self.connection.close()
         print("connection closed...")
 
-    #function that creates a table in the database
-    # def create_songs_table(self):   #pass self in every function to use global or member variables
-    #     query = '''
-    #     CREATE TABLE songs(
-    #     songID VARCHAR(22) NOT NULL PRIMARY KEY,
-    #     Name VARCHAR(20),
-    #     Artist VARCHAR(20),
-    #     Album VARCHAR(20),
-    #     releaseDate DATETIME,
-    #     Genre VARCHAR(20),
-    #     Explicit BOOLEAN,
-    #     Duration DOUBLE,
-    #     Energy DOUBLE,
-    #     Danceability DOUBLE,
-    #     Acousticness DOUBLE,
-    #     Liveness DOUBLE,
-    #     Loudness DOUBLE
-    #     );
-    #     '''
-    #     self.cursor.execute(query)
-    #     self.connection.commit()
-
     # Creates the Drivers table in the database
     def create_drivers_table(self):
         query = '''

@@ -22,12 +22,38 @@ db_ops = db_operations(cur_obj, conn)
 # Keeps track of the current user's ID
 currentUserID = "x0"
 
+#Clean the sample data files 
+riders_data = helper.data_cleaner("riders.csv")
+drivers_data = helper.data_cleaner("drivers.csv")
+rides_data = helper.data_cleaner("rides.csv")
+
 
 #checks to see if drivers table is empty
 def create_all_tables():
     db_ops.create_drivers_table()
     db_ops.create_riders_table()
     db_ops.create_rides_table()
+
+#Populates all 3 tables with given sample data
+def populate_with_sample_data():
+    # insert the data from the csv files
+    attribute_count = len(riders_data[0])
+    placeholders = ("%s," * attribute_count)[:-1]
+    query = "INSERT INTO riders VALUES(" + placeholders + ")"
+    db_ops.bulk_insert(query, riders_data)
+
+    attribute_count = len(drivers_data[0])
+    placeholders = ("%s," * attribute_count)[:-1]
+    query = "INSERT INTO drivers VALUES(" + placeholders + ")"
+    db_ops.bulk_insert(query, drivers_data)
+
+    attribute_count = len(rides_data[0])
+    placeholders = ("%s," * attribute_count)[:-1]
+    query = "INSERT INTO rides VALUES(" + placeholders + ")"
+    db_ops.bulk_insert(query, rides_data)
+
+    print("Sample data has been inserted correctly")
+    input("Press Enter to continue...")
 
 def is_empty_drivers():
     query = '''
@@ -36,7 +62,7 @@ def is_empty_drivers():
     '''
 
     result = db_ops.single_record(query)
-    return (result == 0)
+    return result == 0
 
 #checks to see if riders table is empty
 def is_empty_riders():
@@ -85,7 +111,7 @@ def createDriver():
 
     # now that you have the ID, make a new driver with default values
     query = '''INSERT INTO drivers
-            VALUES(\''''+currentUserID+'''\',5.0,True)'''    
+            VALUES(\''''+currentUserID+'''\',5.0,1)'''    
     db_ops.insert_single_record(query)
 
     # We have now created the new driver and added them to the database with initial values.
@@ -231,7 +257,6 @@ def viewRiderRides():
     #Print all of the rider's rides to the screen
     if (results):
         helper.pretty_print(results)
-        input("Press Enter to return to the main menu...")
     else:
         print("You have not been a rider for any rides.")
 
@@ -242,7 +267,7 @@ def activateDriverMode():
     print("Activating driver mode...")
     query = '''
     UPDATE drivers
-    SET activeDriver = True
+    SET activeDriver = 1
     WHERE driverID =\''''+currentUserID+'''\'
     '''
 
@@ -258,7 +283,7 @@ def deactivateDriverMode():
     print("Deactivating driver mode...")
     query = '''
     UPDATE drivers
-    SET activeDriver = False
+    SET activeDriver = 0
     WHERE driverID =\''''+currentUserID+'''\'
     '''
 
@@ -275,7 +300,7 @@ def findDriver():
     query = '''
     SELECT DISTINCT driverID
     FROM drivers
-    WHERE activeDriver = True
+    WHERE activeDriver = 1
     '''
     #Returns the list of active driver IDs
     activeDriverIDs = db_ops.single_attribute(query)
@@ -492,7 +517,7 @@ def returnAllIDs():
 #-----------------MAIN----------------- 
 
 #--------------------------------------
-#ONLY RUN THESE ONCE: I haven't run them yet -Connor
+#ONLY RUN THESE ONCE:
 # db_ops.create_drivers_table()
 # db_ops.create_riders_table()
 # db_ops.create_rides_table()
@@ -500,11 +525,35 @@ def returnAllIDs():
 
 startScreen()
 
+#Ask the user if they want to automatically add fake data
+print("Before we begin, would you like to populate the database with sample data? Type YES or NO")
+addFakeData = helper.get_choice_string(['YES', 'NO'])
+
+#If the user wants to get fake data, add the fake data as long as the tables are empty
+if (addFakeData == 'YES'):
+    #If data already exists, tell the user this function cannot be called
+    if ((not is_empty_drivers()) or (not is_empty_riders()) or (not is_empty_rides())):
+        print("There is already data in one of the databases.")
+        print("Cannot add sample data in case of creating duplicate primary key entries.")
+        print("Please clear all existing data before adding the sample data.")
+        input("Press Enter to continue to the login menu...")
+    else:  
+        #If the databases are all empty, add the sample data as requested
+        populate_with_sample_data()
 
 print('''Are you a new or returning user?: 
 1. New User
 2. Returning User''')
 userType = helper.get_choice([1,2])
+
+#If they want to login but there are no existing users, give them an error and prompt again
+if ((userType == 2) and (is_empty_riders()) and (is_empty_drivers())):
+    while (userType == 2):
+        print("No existing users found. Please create a new user account.")
+        print('''Are you a new or returning user?: 
+        1. New User
+        2. Returning User''')
+        userType = helper.get_choice([1,2])
 
 if userType == 1:   #new user
     print('''Are you a new driver or new rider?: 
