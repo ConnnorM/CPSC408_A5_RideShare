@@ -206,8 +206,12 @@ def viewDriverRides():
     #This is a list of all rides from the current user/driver
     results = db_ops.whole_record(query)
 
-    #Print all of the driver's rides to the screen
-    helper.pretty_print(results)
+    #Print all of the driver's rides to the screen if the list isn't empty
+    if (results):
+        helper.pretty_print(results)
+    else:
+        print("You have not driven for any rides. Hit the road!")
+
     input("Press Enter to return to the main menu...")
 
 #Allow a rider to view all rides they have ridden for
@@ -225,7 +229,12 @@ def viewRiderRides():
     results = db_ops.whole_record(query)
 
     #Print all of the rider's rides to the screen
-    helper.pretty_print(results)
+    if (results):
+        helper.pretty_print(results)
+        input("Press Enter to return to the main menu...")
+    else:
+        print("You have not been a rider for any rides.")
+
     input("Press Enter to return to the main menu...")
 
 #Allows a driver to enter active mode
@@ -380,6 +389,14 @@ def rateMyDriver():
     #Run query for riderID and get all of their rides
     # #This is a list of all ride IDs from the current user/rider
     currUserRideIDList = db_ops.whole_record(query)
+
+    #If the list of rides for the user is empty, the user had not been on a ride so can't give a rating
+    if (not currUserRideIDList):
+        #Inform the user of the error and return to main menu
+        print("You have not been on any rides, so you cannot rate a previous driver.")
+        input("Press Enter to return to the main menu...")
+        return
+
 
     #Get the most recent ride ID (highest numerical ride ID as string)
     mostRecentRideID = getMostRecentRideID(currUserRideIDList)
