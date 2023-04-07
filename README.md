@@ -8,7 +8,7 @@ This program simulates a generic ridesharing app in which users can create an ac
      CPSC 408-01
      Assignment 4 - Playlist App
 
-     Gabriel Garcia
+     Gabriel "Bug Spray" Garcia
      002344584
      gagarcia@chapman.edu
      CPSC 408-01
